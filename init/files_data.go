@@ -40,7 +40,7 @@ MAIL_FROM_NAME="${APP_NAME}"
 const webRouteData = `package routes
 
 import (
-	. "github.com/nizigama/one/http"
+	. "github.com/nizigama/one/web"
 	"net/http"
 )
 
@@ -63,7 +63,7 @@ const mainHttpData = `package main
 
 import (
 	. "github.com/nizigama/one"
-	"github.com/nizigama/one/http"
+	"github.com/nizigama/one/web"
 )
 
 func main() {
@@ -78,4 +78,16 @@ func main() {
 
 }
 
+`
+
+const welcomeTmpl = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ .title }}</title>
+</head>
+<body>
+    <h1 style="text-align: center; color: #303030">Welcome to the One & only framework</h1>
+</body>
+</html>
 `

@@ -3,8 +3,8 @@ package one
 import (
 	"fmt"
 	"github.com/joho/godotenv"
-	"github.com/nizigama/one/http"
 	_ "github.com/nizigama/one/init"
+	"github.com/nizigama/one/web"
 	"github.com/rs/zerolog"
 	"log"
 	"os"
@@ -19,8 +19,8 @@ type One struct {
 	Debug      bool
 	Version    string
 	Log        *Logger
-	Router     *http.Router
-	HttpKernel *http.Kernel
+	Router     *web.Router
+	HttpKernel *web.Kernel
 	config     Config
 }
 
@@ -33,8 +33,8 @@ func New() *One {
 	one.configure()
 
 	one.Log = NewLogger(one.config.LogLevel, one.config.LogFormatter, one.config.LogChannel)
-	one.Router = http.NewRouter(one.Debug)
-	one.HttpKernel = http.NewKernel(one.config.Debugging, one.config.ServerPort, one.Router)
+	one.Router = web.NewRouter(one.Debug)
+	one.HttpKernel = web.NewKernel(one.config.Debugging, one.config.ServerPort, one.Router)
 
 	return one
 }

@@ -93,5 +93,9 @@ func getInitialFiles() []initFile {
 			filePath: "app/http/main.go",
 			fileData: []byte(mainHttpData),
 		},
+		{
+			filePath: "resources/views/welcome.tmpl",
+			fileData: []byte(welcomeTmpl),
+		},
 	}
 }
