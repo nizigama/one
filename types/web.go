@@ -1,15 +1,19 @@
 package types
 
-import "net/http"
+import (
+	"net/http"
+)
 
 type Request struct {
 	*http.Request
 }
 
-type Response struct {
-	Content string
-	Status  int
-	Headers map[string]string
-}
+type Handler func(request *Request) WebWriter
 
-type Handler func(request *Request) *Response
+type WebWriter interface {
+	Write() (int, error)
+	WriteStatus() WebWriter
+	SetHeaders(map[string]string) WebWriter
+	SetWriter(http.ResponseWriter) WebWriter
+	SetStatus(code int)
+}

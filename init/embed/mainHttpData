@@ -1,0 +1,18 @@
+package main
+
+import (
+	. "github.com/nizigama/one"
+	"github.com/nizigama/one/web"
+)
+
+func main() {
+
+	one := New()
+
+	http.DefaultRoutes(one.Router)
+
+	if err := one.StartServer(); err != nil {
+		one.Log.Error().Err(err).Msg("Failed starting the server")
+	}
+
+}

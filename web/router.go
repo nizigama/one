@@ -36,18 +36,11 @@ func DefaultRoutes(router *Router) {
 func (r *Router) View(path string, name string) {
 
 	r.chiRouter.Get(path, func(writer http.ResponseWriter, request *http.Request) {
+		request.ParseForm()
+
 		requestData := &types.Request{Request: request}
 
-		response := View(name, requestData)
-
-		for key, value := range response.Headers {
-
-			writer.Header().Set(key, value)
-		}
-
-		writer.WriteHeader(response.Status)
-
-		writer.Write([]byte(response.Content))
+		View(name, requestData).SetWriter(writer).WriteStatus().Write()
 	})
 }
 
@@ -56,14 +49,7 @@ func (r *Router) Get(path string, handler types.Handler) {
 	r.chiRouter.Get(path, func(writer http.ResponseWriter, request *http.Request) {
 		response := handler(&types.Request{request})
 
-		for key, value := range response.Headers {
-
-			writer.Header().Set(key, value)
-		}
-
-		writer.WriteHeader(response.Status)
-
-		writer.Write([]byte(response.Content))
+		response.SetWriter(writer).WriteStatus().Write()
 	})
 }
 
@@ -72,14 +58,7 @@ func (r *Router) Post(path string, handler types.Handler) {
 	r.chiRouter.Post(path, func(writer http.ResponseWriter, request *http.Request) {
 		response := handler(&types.Request{request})
 
-		for key, value := range response.Headers {
-
-			writer.Header().Set(key, value)
-		}
-
-		writer.WriteHeader(response.Status)
-
-		writer.Write([]byte(response.Content))
+		response.SetWriter(writer).WriteStatus().Write()
 	})
 }
 
@@ -88,14 +67,7 @@ func (r *Router) Put(path string, handler types.Handler) {
 	r.chiRouter.Put(path, func(writer http.ResponseWriter, request *http.Request) {
 		response := handler(&types.Request{request})
 
-		for key, value := range response.Headers {
-
-			writer.Header().Set(key, value)
-		}
-
-		writer.WriteHeader(response.Status)
-
-		writer.Write([]byte(response.Content))
+		response.SetWriter(writer).WriteStatus().Write()
 	})
 }
 
@@ -104,13 +76,6 @@ func (r *Router) Delete(path string, handler types.Handler) {
 	r.chiRouter.Delete(path, func(writer http.ResponseWriter, request *http.Request) {
 		response := handler(&types.Request{request})
 
-		for key, value := range response.Headers {
-
-			writer.Header().Set(key, value)
-		}
-
-		writer.WriteHeader(response.Status)
-
-		writer.Write([]byte(response.Content))
+		response.SetWriter(writer).WriteStatus().Write()
 	})
 }

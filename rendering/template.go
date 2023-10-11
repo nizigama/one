@@ -4,24 +4,44 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/nizigama/one/types"
+	"github.com/stretchr/testify/mock"
 	"html/template"
-	stdHttp "net/http"
+	"io"
+	"net/http"
 	"os"
 	"strings"
 )
 
+type TemplateFileReader interface {
+	Read(string, string) ([]byte, error)
+}
+
 type Template struct {
-	Path      string
-	content   *bytes.Buffer
-	CsrfToken string
-	Data      interface{}
+	Name        string
+	Data        interface{}
+	FileReader  TemplateFileReader
+	basePath    string
+	content     *bytes.Buffer
+	status      int
+	destination http.ResponseWriter
+}
+
+type Reader struct {
+}
+
+type TemplateFileReaderMock struct {
+	mock.Mock
 }
 
 const basePath = "resources/views"
 
-func getViewFilePath(template string) string {
-	paths := strings.Split(template, ",")
+func (o *TemplateFileReaderMock) Read(fileName, basePath string) ([]byte, error) {
+	args := o.Called(fileName, basePath)
+	return args.Get(0).([]byte), args.Error(1)
+}
+
+func (r *Reader) Read(fileName, basePath string) ([]byte, error) {
+	paths := strings.Split(fileName, ",")
 	path, _ := os.Getwd()
 
 	path = fmt.Sprintf("%s/%s", path, basePath)
@@ -34,52 +54,108 @@ func getViewFilePath(template string) string {
 		path = fmt.Sprintf("%s/%s/", path, step)
 	}
 
-	return path
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return io.ReadAll(f)
 }
 
-func View(viewTemplate string, data interface{}) *types.Response {
+func (v *Template) Parse() {
 
-	view := Template{
-		Path:      viewTemplate,
-		content:   &bytes.Buffer{},
-		CsrfToken: "",
-		Data:      data,
+	if v.content == nil {
+		v.content = &bytes.Buffer{}
 	}
 
-	response := &types.Response{
-		Content: "",
-		Status:  stdHttp.StatusOK,
-		Headers: map[string]string{
-			"Content-Type": "text/html",
-		},
-	}
-
-	filePath := getViewFilePath(view.Path)
-
-	tpl, err := template.ParseFiles(filePath)
+	templateData, err := v.FileReader.Read(v.Name, v.basePath)
 	if err != nil {
+		v.content.Reset()
+		v.content.WriteString(err.Error())
+		v.status = http.StatusInternalServerError
+	}
 
+	_, err = v.content.Write(templateData)
+	if err != nil {
+		v.content.Reset()
+		v.content.WriteString(err.Error())
+		v.status = http.StatusInternalServerError
+	}
+
+	tpl, err := template.New(v.Name).Parse(v.content.String())
+	if err != nil {
+		v.content.Reset()
 		if errors.Is(err, os.ErrNotExist) {
-			response.Content = err.Error()
-			response.Status = stdHttp.StatusNotFound
+			v.content.WriteString(err.Error())
+			v.status = http.StatusNotFound
 		} else {
-
-			response.Content = err.Error()
-			response.Status = stdHttp.StatusInternalServerError
+			v.content.WriteString(err.Error())
+			v.status = http.StatusInternalServerError
 		}
 
-		return response
+		return
 	}
 
-	err = tpl.Execute(view.content, data)
+	v.content.Reset()
+	err = tpl.Execute(v.content, v.Data)
 	if err != nil {
-		response.Content = err.Error()
-		response.Status = stdHttp.StatusInternalServerError
-		return response
+		v.content.Reset()
+		v.content.WriteString(err.Error())
+		v.status = http.StatusInternalServerError
+		return
 	}
 
-	response.Status = stdHttp.StatusOK
-	response.Content = view.content.String()
+	v.status = http.StatusOK
+}
 
-	return response
+func (v *Template) SetWriter(w http.ResponseWriter) *Template {
+
+	v.destination = w
+
+	return v
+}
+
+func (v *Template) Write() (int, error) {
+
+	return v.destination.Write(v.content.Bytes())
+}
+
+func (v *Template) SetStatus(code int) {
+	v.status = code
+}
+
+func (v *Template) GetContent() []byte {
+	return v.content.Bytes()
+}
+
+func (v *Template) SetBasePath(basePath string) {
+	v.basePath = basePath
+}
+
+func (v *Template) WriteStatus() *Template {
+	v.destination.WriteHeader(v.status)
+	return v
+}
+
+func (v *Template) SetHeaders(headers map[string]string) *Template {
+	for key, value := range headers {
+		v.destination.Header().Set(key, value)
+	}
+
+	return v
+}
+
+func View(viewTemplate string, data interface{}) *Template {
+
+	view := &Template{
+		Name:       viewTemplate,
+		Data:       data,
+		FileReader: &Reader{},
+		basePath:   basePath,
+		content:    &bytes.Buffer{},
+	}
+
+	view.Parse()
+
+	return view
 }

@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>One & only</title>
+</head>
+<body>
+    <h1 style="text-align: center; color: #303030">Welcome to the One & only framework</h1>
+    <h4 style="text-align: center; color: #303030">Served on <a style="color:green" href="http://{{ .Host }}">http://{{ .Host }}</a></h4>
+</body>
+</html>

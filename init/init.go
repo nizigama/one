@@ -1,6 +1,7 @@
 package init
 
 import (
+	_ "embed"
 	"fmt"
 	"github.com/nizigama/one/helpers"
 	"log"
@@ -16,6 +17,20 @@ type initFile struct {
 	filePath string
 	fileData []byte
 }
+
+var (
+	//go:embed embed/envData
+	envData []byte
+
+	//go:embed embed/webRouteData
+	webRouteData []byte
+
+	//go:embed embed/mainHttpData
+	mainHttpData []byte
+
+	//go:embed embed/welcomeTmpl
+	welcomeTmpl []byte
+)
 
 func init() {
 
@@ -76,26 +91,26 @@ func getInitialFiles() []initFile {
 	return []initFile{
 		{
 			filePath: ".env",
-			fileData: []byte(envData),
+			fileData: envData,
 		},
 		{
 			filePath: ".env.example",
-			fileData: []byte(envData),
+			fileData: envData,
 		},
 		{
 			filePath: "storage/logs/one.log",
 		},
 		{
 			filePath: "routes/web.go",
-			fileData: []byte(webRouteData),
+			fileData: webRouteData,
 		},
 		{
 			filePath: "app/http/main.go",
-			fileData: []byte(mainHttpData),
+			fileData: mainHttpData,
 		},
 		{
 			filePath: "resources/views/welcome.tmpl",
-			fileData: []byte(welcomeTmpl),
+			fileData: welcomeTmpl,
 		},
 	}
 }

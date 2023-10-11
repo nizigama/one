@@ -1,0 +1,20 @@
+package routes
+
+import (
+	. "github.com/nizigama/one/web"
+	"net/http"
+)
+
+func WebRoutes(router *Router) {
+
+	router.Get("/", func(request *Request) *Response {
+
+		return &Response{
+			Status: http.StatusBadRequest,
+			Headers: map[string]string{
+				"Content-Type": "text/html",
+			},
+			Content: "<h1>Welcome to the One & Only</h1>",
+		}
+	})
+}
