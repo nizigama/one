@@ -13,7 +13,7 @@ import (
 )
 
 type TemplateFileReader interface {
-	Read(string, string) ([]byte, error)
+	Read(string, string, string) ([]byte, error)
 }
 
 type Template struct {
@@ -21,6 +21,7 @@ type Template struct {
 	Data        interface{}
 	FileReader  TemplateFileReader
 	basePath    string
+	ext         string
 	content     *bytes.Buffer
 	status      int
 	destination http.ResponseWriter
@@ -34,13 +35,14 @@ type TemplateFileReaderMock struct {
 }
 
 const basePath = "resources/views"
+const extension = ".tmpl"
 
-func (o *TemplateFileReaderMock) Read(fileName, basePath string) ([]byte, error) {
-	args := o.Called(fileName, basePath)
+func (o *TemplateFileReaderMock) Read(fileName, basePath string, ext string) ([]byte, error) {
+	args := o.Called(fileName, basePath, ext)
 	return args.Get(0).([]byte), args.Error(1)
 }
 
-func (r *Reader) Read(fileName, basePath string) ([]byte, error) {
+func (r *Reader) Read(fileName, basePath string, ext string) ([]byte, error) {
 	paths := strings.Split(fileName, ",")
 	path, _ := os.Getwd()
 
@@ -48,7 +50,7 @@ func (r *Reader) Read(fileName, basePath string) ([]byte, error) {
 
 	for idx, step := range paths {
 		if idx == len(paths)-1 {
-			path = fmt.Sprintf("%s/%s.tmpl", path, step)
+			path = fmt.Sprintf("%s/%s%s", path, step, ext)
 			continue
 		}
 		path = fmt.Sprintf("%s/%s/", path, step)
@@ -68,7 +70,7 @@ func (v *Template) Parse() {
 		v.content = &bytes.Buffer{}
 	}
 
-	templateData, err := v.FileReader.Read(v.Name, v.basePath)
+	templateData, err := v.FileReader.Read(v.Name, v.basePath, v.ext)
 	if err != nil {
 		v.content.Reset()
 		v.content.WriteString(err.Error())
@@ -128,6 +130,10 @@ func (v *Template) GetContent() []byte {
 	return v.content.Bytes()
 }
 
+func (v *Template) GetBasePath() string {
+	return v.basePath
+}
+
 func (v *Template) SetBasePath(basePath string) {
 	v.basePath = basePath
 }
@@ -152,6 +158,7 @@ func View(viewTemplate string, data interface{}) *Template {
 		Data:       data,
 		FileReader: &Reader{},
 		basePath:   basePath,
+		ext:        extension,
 		content:    &bytes.Buffer{},
 	}
 
