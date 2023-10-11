@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	_ "github.com/nizigama/one/init"
+	"github.com/nizigama/one/routing"
 	"github.com/nizigama/one/web"
 	"github.com/rs/zerolog"
 	"log"
@@ -15,13 +16,13 @@ const version = "0.1.0"
 const defaultServerPort int = 9000
 
 type One struct {
-	AppName    string
-	Debug      bool
-	Version    string
-	Log        *Logger
-	Router     *web.Router
-	HttpKernel *web.Kernel
-	config     Config
+	AppName        string
+	Debug          bool
+	Version        string
+	Log            *Logger
+	HttpKernel     *web.Kernel
+	PathsResolvers []routing.PathResolver
+	config         Config
 }
 
 func New() *One {
@@ -33,17 +34,16 @@ func New() *One {
 	one.configure()
 
 	one.Log = NewLogger(one.config.LogLevel, one.config.LogFormatter, one.config.LogChannel)
-	one.Router = web.NewRouter(one.Debug)
-	one.HttpKernel = web.NewKernel(one.config.Debugging, one.config.ServerPort, one.Router)
+	one.HttpKernel = web.NewKernel(one.config.Debugging, one.config.ServerPort)
 
 	return one
 }
 
-func (o *One) StartServer() error {
+func (o *One) Serve() error {
 
 	o.Log.Info().Bool("Debug", o.Debug).Msg("Starting server...")
 
-	return o.HttpKernel.Start()
+	return o.HttpKernel.Boot(o.PathsResolvers...)
 }
 
 func (o *One) Env(key string) (string, bool) {

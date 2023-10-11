@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	github.com/alexedwards/scs/v2 v2.5.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
